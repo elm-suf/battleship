@@ -8,7 +8,8 @@
 (deftemplate guess 
 	(slot y)
 	(slot x)
-	(slot content (allowed-values water left right middle top bot nil sub ) (default nil))
+	(slot content 
+	(allowed-values water left right middle top bot nil sub flag ) (default nil))
 )
 
 (deftemplate fireable-per-y 
@@ -27,29 +28,33 @@
 ; ################################################################
 
 (defrule init-fireable-y
-	; (declare (salience 10))
+	(declare (salience 10))
 	(k-per-col (col ?r) (num ?n))
 	=> 
 	(assert(fireable-per-y (y ?r)(count ?n)))
 )
 
 (defrule init-fireable-x 
-	; (declare (salience 10))
+	(declare (salience 10))
 	(k-per-row (row ?r) (num ?n))
 	=> 
 	(assert(fireable-per-x(x ?r) (count ?n)))
 )
 
 (defrule k-cells
+	(declare (salience 9))
 	(k-cell (x ?x) (y ?y) (content ?t))
 	?guess <- (guess (x ?x) (y ?y) (content nil))
 	?gx <- (fireable-per-x (x ?x) (count ?cx))
 	?gy <- (fireable-per-y (y ?y) (count ?cy))
 	=>
+	(printout t "InitialFact:[" ?x ", " ?y "] contains " ?t "." crlf)
+	(if (neq ?t  water)
+	 then 
+		(modify ?gx (count (- ?cx 1)))
+		(modify ?gy (count (- ?cy 1)))
+	)
 	(modify ?guess (content ?t))
-	(modify ?gx (count (- ?cx 1)))
-	(modify ?gy (count (- ?cy 1)))
-
 )
 
 (defrule all-water-x
@@ -142,11 +147,64 @@
 	(printout t "Guess RT ["  ?x ", " ?y2 "]" crlf)
 )
 
+; ===========
+(defrule guess-flag-left
+	(guess (content left) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x) (y ?y2&=(+ ?y 1)))
+	?gx <- (fireable-per-x (x ?x) (count ?cx))
+	?gy <- (fireable-per-y (y ?y2) (count ?cy)) 
+ =>
+	(modify ?gg (content flag))
+	(modify ?gx (count (- ?cx 1)))
+	(modify ?gy (count (- ?cy 1)))
+	(printout t "Guess Flag ["  ?x ", " ?y2 "]" crlf)
+)
+
+(defrule guess-flag-right
+	(guess (content right) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x) (y ?y2&=(- ?y 1)))
+	?gx <- (fireable-per-x (x ?x) (count ?cx))
+	?gy <- (fireable-per-y (y ?y2) (count ?cy)) 
+ =>
+	(modify ?gg (content flag))
+	(modify ?gx (count (- ?cx 1)))
+	(modify ?gy (count (- ?cy 1)))
+
+	(printout t "Guess Flag ["  ?x ", " ?y2 "]" crlf)
+)
+
+(defrule guess-flag-bot
+	(guess (content bot) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x2&=(- ?x 1)) (y ?y))
+	?gx <- (fireable-per-x (x ?x2) (count ?cx))
+	?gy <- (fireable-per-y (y ?y) (count ?cy)) 
+ =>
+	(modify ?gg (content flag))
+	(modify ?gx (count (- ?cx 1)))
+	(modify ?gy (count (- ?cy 1)))
+	(printout t "Guess Flag [" ?x2 ", " ?y "]" crlf)
+
+)
+
+(defrule guess-flag-top
+	(guess (content top) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x2&=(+ ?x 1)) (y ?y))
+	?gx <- (fireable-per-x (x ?x2) (count ?cx))
+	?gy <- (fireable-per-y (y ?y) (count ?cy)) 
+ =>
+	(modify ?gg (content flag))
+	(modify ?gx (count (- ?cx 1)))
+	(modify ?gy (count (- ?cy 1)))
+	(printout t "Guess Flag [" ?x2 ", " ?y "]" crlf)
+
+)
+
+
 
 (defrule print-what-i-know-since-the-beginning
-	(k-cell (x ?x) (y ?y) (content ?t) )
+	?ff <- (k-cell (x ?x) (y ?y) (content ?t) )
  =>
-	(printout t "I know that cell [" ?x ", " ?y "] contains " ?t "." crlf)
+	(printout t "I know that cell [" ?x ", " ?y "] contains " ?ff "." crlf)
 )
 
 (deffacts agent-facts
