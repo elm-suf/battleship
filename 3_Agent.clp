@@ -57,8 +57,7 @@
 	?guess <- (guess (x ?x) (y ?y)  (content nil))
  =>
 	(modify ?guess (content water))
-
-	(printout t "Guess W [" ?x ", " ?y "]" crlf)
+	(printout t "Guess-X [" ?x ", " ?y "]" crlf)
 )
 
 (defrule all-water-y
@@ -66,7 +65,7 @@
 	?guess <- (guess (x ?x) (y ?y)  (content nil))
  =>
 	(modify ?guess (content water))
-	(printout t "Guess W [" ?x ", " ?y "]" crlf)
+	(printout t "Guess-Y [" ?x ", " ?y "]" crlf)
 )
 
 ; ==================================
@@ -77,7 +76,7 @@
 	(test (and (neq ?c water) (neq ?c nil)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess TL [" (- ?x 1) ", " (- ?y 1) "]" crlf)
+	(printout t "Guess TL ["  ?x2 ", " ?y2 "]" crlf)
 )
 
 (defrule guessed-some-tr
@@ -104,7 +103,43 @@
 	(test (and (neq ?c water) (neq ?c nil)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess BR ["  ?x2 ", " ?y2 "]" crlf)
+	(printout t "Guess BR  ["  ?x2 ", " ?y2 "]" crlf)
+)
+
+(defrule guessed-some-tp
+	(guess (content ?c) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x2&=(- ?x 1)) (y ?y))
+	(test (or (eq ?c sub) (eq ?c top) (eq ?c right) (eq ?c left)))
+ =>
+	(modify ?gg (content water))
+	(printout t "Guess TP ["  ?x2 ", " ?y "]" crlf)
+)
+
+(defrule guessed-some-bt
+	(guess (content ?c) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x2&=(+ ?x 1)) (y ?y))
+	(test (or (eq ?c sub) (eq ?c bot) (eq ?c right) (eq ?c left)))
+ =>
+	(modify ?gg (content water))
+	(printout t "Guess BT ["  ?x2 ", " ?y "]" crlf)
+)
+
+(defrule guessed-some-lf
+	(guess (content ?c) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x ) (y ?y2&=(- ?y 1)))
+	(test (or (eq ?c sub) (eq ?c top) (eq ?c right) (eq ?c bot)))
+ =>
+	(modify ?gg (content water))
+	(printout t "Guess LF ["  ?x ", " ?y2 "]" crlf)
+)
+
+(defrule guessed-some-rt
+	(guess (content ?c) (x ?x) (y ?y))
+	?gg <- (guess (content nil) (x ?x ) (y ?y2&=(+ ?y 1)))
+	(test (or (eq ?c sub) (eq ?c top) (eq ?c left) (eq ?c bot)))
+ =>
+	(modify ?gg (content water))
+	(printout t "Guess RT ["  ?x ", " ?y2 "]" crlf)
 )
 
 
@@ -113,7 +148,6 @@
  =>
 	(printout t "I know that cell [" ?x ", " ?y "] contains " ?t "." crlf)
 )
-
 
 (deffacts agent-facts
 	(guess (y 0) (x 0) (content nil))
