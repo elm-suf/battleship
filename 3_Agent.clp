@@ -23,15 +23,53 @@
 )
 
 
+(deftemplate free-cells-x
+	(slot count)
+	(slot x)
+)
+
+(deftemplate free-cells-y
+	(slot count)
+	(slot y)
+)
+
+(deftemplate last-guessed
+	(slot x)
+	(slot y)
+	(slot content)
+	(slot msg (default "Guess   "))
+)
+
 ; ################################################################
 ; ##########################  Rules ##############################
 ; ################################################################
 
-(defrule init-fireable-y
+(defrule guess-occured
+	(declare (salience 100))
+ 	?guess <- (last-guessed (msg ?msg) (x ?x) (y ?y) (content ?t))
+	?gx <- (fireable-per-x (x ?x) (count ?cx))
+	?gy <- (fireable-per-y (y ?y) (count ?cy))
+	?fx <- (free-cells-x (x ?x) (count ?cfx))
+	?fy <- (free-cells-y (y ?y) (count ?cfy))	
+ => 
+	(if (neq ?t  water)
+	 then 
+		(modify ?gx (count (- ?cx 1)))
+		(modify ?gy (count (- ?cy 1)))
+	)
+	(modify ?fx (count (- ?cfx 1)))
+	(modify ?fy (count (- ?cfy 1)))
+	(retract ?guess)
+	(printout t ?msg "	["  ?x ", " ?y "] " ?t "." crlf)
+
+)
+
+(defrule init-count-y
 	(declare (salience 10))
 	(k-per-col (col ?r) (num ?n))
 	=> 
 	(assert(fireable-per-y (y ?r)(count ?n)))
+	(assert(free-cells-y (y ?r)(count 10)))
 )
 
 (defrule init-fireable-x 
@@ -39,22 +77,17 @@
 	(k-per-row (row ?r) (num ?n))
 	=> 
 	(assert(fireable-per-x(x ?r) (count ?n)))
+	(assert(free-cells-x (x ?r)(count 10)))
 )
 
 (defrule k-cells
 	(declare (salience 9))
 	(k-cell (x ?x) (y ?y) (content ?t))
 	?guess <- (guess (x ?x) (y ?y) (content nil))
-	?gx <- (fireable-per-x (x ?x) (count ?cx))
-	?gy <- (fireable-per-y (y ?y) (count ?cy))
 	=>
-	(printout t "InitialFact:[" ?x ", " ?y "] contains " ?t "." crlf)
-	(if (neq ?t  water)
-	 then 
-		(modify ?gx (count (- ?cx 1)))
-		(modify ?gy (count (- ?cy 1)))
-	)
+	; (printout t "InitialFact:[" ?x ", " ?y "] contains " ?t "." crlf)
 	(modify ?guess (content ?t))
+	(assert (last-guessed (msg InitialFact) (x ?x) (y ?y) (content ?t)))
 )
 
 (defrule all-water-x
@@ -62,7 +95,8 @@
 	?guess <- (guess (x ?x) (y ?y)  (content nil))
  =>
 	(modify ?guess (content water))
-	(printout t "Guess-X [" ?x ", " ?y "]" crlf)
+	(assert (last-guessed (msg Guess-XX) (x ?x) (y ?y) (content water)))
+	; (printout t "Guess-X [" ?x ", " ?y "]" crlf)
 )
 
 (defrule all-water-y
@@ -70,7 +104,7 @@
 	?guess <- (guess (x ?x) (y ?y)  (content nil))
  =>
 	(modify ?guess (content water))
-	(printout t "Guess-Y [" ?x ", " ?y "]" crlf)
+	(assert (last-guessed (msg Guess-YY) (x ?x) (y ?y) (content water)))
 )
 
 ; ==================================
@@ -81,7 +115,7 @@
 	(test (and (neq ?c water) (neq ?c nil)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess TL ["  ?x2 ", " ?y2 "]" crlf)
+	(assert (last-guessed (msg Guess-Tl) (x ?x2) (y ?y2) (content water)))
 )
 
 (defrule guessed-some-tr
@@ -90,7 +124,7 @@
 	(test (and (neq ?c water) (neq ?c nil)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess TR ["  ?x2 ", " ?y2 "]" crlf)
+	(assert (last-guessed (msg Guess-TR) (x ?x2) (y ?y2) (content water)))
 )
 
 (defrule guessed-some-bl
@@ -99,7 +133,7 @@
 	(test (and (neq ?c water) (neq ?c nil)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess BL ["  ?x2 ", " ?y2 "]" crlf)
+	(assert (last-guessed (msg Guess-BL) (x ?x2) (y ?y2) (content water)))
 )
 
 (defrule guessed-some-br
@@ -108,7 +142,7 @@
 	(test (and (neq ?c water) (neq ?c nil)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess BR  ["  ?x2 ", " ?y2 "]" crlf)
+ 	(assert (last-guessed (msg Guess-BR) (x ?x2) (y ?y2) (content water)))
 )
 
 (defrule guessed-some-tp
@@ -117,7 +151,7 @@
 	(test (or (eq ?c sub) (eq ?c top) (eq ?c right) (eq ?c left)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess TP ["  ?x2 ", " ?y "]" crlf)
+	(assert (last-guessed (msg Guess-BR) (x ?x2) (y ?y) (content water)))
 )
 
 (defrule guessed-some-bt
@@ -126,7 +160,7 @@
 	(test (or (eq ?c sub) (eq ?c bot) (eq ?c right) (eq ?c left)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess BT ["  ?x2 ", " ?y "]" crlf)
+	(assert (last-guessed (msg Guess-BT) (x ?x2) (y ?y) (content water)))
 )
 
 (defrule guessed-some-lf
@@ -135,7 +169,7 @@
 	(test (or (eq ?c sub) (eq ?c top) (eq ?c right) (eq ?c bot)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess LF ["  ?x ", " ?y2 "]" crlf)
+	(assert (last-guessed (msg Guess-LF) (x ?x) (y ?y2) (content water)))
 )
 
 (defrule guessed-some-rt
@@ -144,68 +178,42 @@
 	(test (or (eq ?c sub) (eq ?c top) (eq ?c left) (eq ?c bot)))
  =>
 	(modify ?gg (content water))
-	(printout t "Guess RT ["  ?x ", " ?y2 "]" crlf)
+	(assert (last-guessed (msg Guess-RT) (x ?x) (y ?y2) (content water)))
 )
 
 ; ===========
 (defrule guess-flag-left
 	(guess (content left) (x ?x) (y ?y))
 	?gg <- (guess (content nil) (x ?x) (y ?y2&=(+ ?y 1)))
-	?gx <- (fireable-per-x (x ?x) (count ?cx))
-	?gy <- (fireable-per-y (y ?y2) (count ?cy)) 
  =>
 	(modify ?gg (content flag))
-	(modify ?gx (count (- ?cx 1)))
-	(modify ?gy (count (- ?cy 1)))
-	(printout t "Guess Flag ["  ?x ", " ?y2 "]" crlf)
+	(assert (last-guessed  (x ?x) (y ?y2) (content flag)))
 )
 
 (defrule guess-flag-right
 	(guess (content right) (x ?x) (y ?y))
 	?gg <- (guess (content nil) (x ?x) (y ?y2&=(- ?y 1)))
-	?gx <- (fireable-per-x (x ?x) (count ?cx))
-	?gy <- (fireable-per-y (y ?y2) (count ?cy)) 
  =>
 	(modify ?gg (content flag))
-	(modify ?gx (count (- ?cx 1)))
-	(modify ?gy (count (- ?cy 1)))
-
-	(printout t "Guess Flag ["  ?x ", " ?y2 "]" crlf)
+	(assert (last-guessed  (x ?x) (y ?y2) (content flag)))
 )
 
 (defrule guess-flag-bot
 	(guess (content bot) (x ?x) (y ?y))
 	?gg <- (guess (content nil) (x ?x2&=(- ?x 1)) (y ?y))
-	?gx <- (fireable-per-x (x ?x2) (count ?cx))
-	?gy <- (fireable-per-y (y ?y) (count ?cy)) 
  =>
 	(modify ?gg (content flag))
-	(modify ?gx (count (- ?cx 1)))
-	(modify ?gy (count (- ?cy 1)))
-	(printout t "Guess Flag [" ?x2 ", " ?y "]" crlf)
-
+	(assert (last-guessed  (x ?x2) (y ?y) (content flag)))
 )
 
 (defrule guess-flag-top
 	(guess (content top) (x ?x) (y ?y))
 	?gg <- (guess (content nil) (x ?x2&=(+ ?x 1)) (y ?y))
-	?gx <- (fireable-per-x (x ?x2) (count ?cx))
-	?gy <- (fireable-per-y (y ?y) (count ?cy)) 
  =>
 	(modify ?gg (content flag))
-	(modify ?gx (count (- ?cx 1)))
-	(modify ?gy (count (- ?cy 1)))
-	(printout t "Guess Flag [" ?x2 ", " ?y "]" crlf)
-
+	(assert (last-guessed  (x ?x2) (y ?y) (content flag)))
 )
 
-
-
-(defrule print-what-i-know-since-the-beginning
-	?ff <- (k-cell (x ?x) (y ?y) (content ?t) )
- =>
-	(printout t "I know that cell [" ?x ", " ?y "] contains " ?ff "." crlf)
-)
 
 (deffacts agent-facts
 	(guess (y 0) (x 0) (content nil))
