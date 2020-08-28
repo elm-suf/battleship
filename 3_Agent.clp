@@ -399,6 +399,52 @@
 	)
 )
 
+(defrule flag-to-sub
+	; (declare (salience 10))
+	?gg <- (guess (content flag) (x ?x&:(or (= ?x 0) (= ?x 9))) (y ?y&:(or (= ?y 0) (= ?y 9))))
+	(guess (content water) (x ?x2&:(or (- ?x 1) (+ ?x 1))) (y ?y))
+	(guess (content water) (x ?x) (y ?y2&:(or (- ?y 1) (+ ?y 1))))
+ =>
+	(modify ?gg (content sub))
+	(printout t "SUB	["  ?x ", " ?y "]." crlf)
+)
+
+
+(defrule flag-to-sub-2
+	(declare (salience 10))
+	?gg <- (guess (content flag) (x ?x&:(or (= ?x 0) (= ?x 9))) (y ?y))
+	(guess (content water) (x ?x2&:(or (- ?x 1) (+ ?x 1))) (y ?y))
+	(guess (content water) (x ?x) (y ?y2&=(+ ?y 1)))
+	(guess (content water) (x ?x) (y ?y3&=(- ?y 1)))
+ =>
+	(modify ?gg (content sub))
+	(printout t "SUB-1	["  ?x ", " ?y "]." crlf)
+)
+
+
+(defrule flag-to-sub-3
+	(declare (salience 10))
+	?gg <- (guess (content flag) (y ?y&:(or (= ?y 0) (= ?y 9))) (x ?x))
+	(guess (content water) (y ?y2&:(or (- ?y 1) (+ ?y 1))) (x ?x))
+	(guess (content water) (y ?y) (x ?x2&=(+ ?x 1)))
+	(guess (content water) (y ?y) (x ?x3&=(- ?x 1)))
+ =>
+	(modify ?gg (content sub))
+	(printout t "SUB-3	["  ?x ", " ?y "]." crlf)
+)
+
+
+(defrule flag-sub-4
+	?gg <- (guess (content flag) (y ?y) (x ?x))
+	(guess (content water) (x ?x1&=(+ ?x 1)) (y ?y))
+	(guess (content water) (x ?x2&=(- ?x 1)) (y ?y))
+	(guess (content water) (x ?x) (y ?y1&=(+ ?y 1)))
+	(guess (content water) (x ?x) (y ?y2&=(- ?y 1)))
+ =>
+	(modify ?gg (content sub))
+	(printout t "SUB-4	["  ?x ", " ?y "]." crlf)
+)
+
 (deffacts agent-facts
 	(guess (y 0) (x 0) (content nil))
 	(guess (y 0) (x 1) (content nil))
