@@ -238,7 +238,6 @@
 )
 
 
-
 (defrule guess-middle-hor
 	?gg <- (guess (content flag) (x ?x) (y ?y))
     (guess (content ?c1&:(and (neq ?c1 water) (neq ?c1 nil))) (x ?x) (y ?y1&=(+ ?y 1)))
@@ -335,6 +334,70 @@
 
 
 
+(defrule k-middle-guess-r-l
+	(guess (content middle) (x ?x) (y ?y))
+	(guess (content water)  (x ?x2&:(or (+ ?x 1)(- ?x 1))) (y ?y))
+	?right  <- (guess (content ?cright) (x  ?x) (y ?yright&=(+ ?y 1)))
+	?left   <- (guess (content ?cleft ) (x  ?x) (y  ?yleft&=(- ?y 1)))
+ =>
+	(if (eq ?cright nil) then 
+		(modify ?right (content flag))
+		(assert (last-guessed (msg Guess-K_MID) (x ?x) (y ?yright) (content flag)))
+	)
+	(if (eq ?cleft nil) then  
+		(modify ?left  (content flag))
+		(assert (last-guessed (msg Guess-K_MID) (x ?x) (y ?yleft) (content flag)))	
+	)
+)
+
+
+(defrule k-middle-guees-r-l-2
+	(guess (content middle) (x ?x&:(or (= ?x 0) (= ?x 9))) (y ?y))
+	?right  <- (guess (content ?cright) (x  ?x) (y ?yright&=(+ ?y 1)))
+	?left   <- (guess (content ?cleft ) (x  ?x) (y  ?yleft&=(- ?y 1)))
+ =>
+	(if (eq ?cright nil) then 
+		(modify ?right (content flag))
+		(assert (last-guessed (msg Guess-K-09) (x ?x) (y ?yright) (content flag)))
+	)
+	(if (eq ?cleft nil) then  
+		(modify ?left  (content flag))
+		(assert (last-guessed (msg Guess-K-09) (x ?x) (y ?yleft) (content flag)))	
+	)
+)
+
+
+(defrule k-middle-guess-t-b
+	(guess (content middle) (x ?x) (y ?y))
+	(guess (content water)  (x ?x) (y ?y2&:(or (+ ?y 1)(- ?y 1))))
+	?bot  <- (guess (content ?cbot) (y  ?y) (x ?xbot&=(+ ?x 1)))
+	?top   <- (guess (content ?ctop ) (y  ?y) (x  ?xtop&=(- ?x 1)))
+ =>
+	(if (eq ?cbot nil) then 
+		(modify ?bot (content flag))
+		(assert (last-guessed (msg Guess-TB_MID) (x ?xbot) (y ?y) (content flag)))
+	)
+	(if (eq ?ctop nil) then  
+		(modify ?top  (content flag))
+		(assert (last-guessed (msg Guess-TB_MID) (x ?xtop) (y ?y) (content flag)))	
+	)
+)
+
+
+(defrule k-middle-guess-t-b-1
+	(guess (content middle) (y ?y&:(or (= ?y 0) (= ?y 9))) (x ?x))
+	?bot  <- (guess (content ?cbot) (y  ?y) (x ?xbot&=(+ ?x 1)))
+	?top   <- (guess (content ?ctop ) (y  ?y) (x  ?xtop&=(- ?x 1)))
+ =>
+	(if (eq ?cbot nil) then 
+		(modify ?bot (content flag))
+		(assert (last-guessed (msg Guess-TB-09) (x ?xbot) (y ?y) (content flag)))
+	)
+	(if (eq ?ctop nil) then  
+		(modify ?top (content flag))
+		(assert (last-guessed (msg Guess-TB-09) (x ?xtop) (y ?y) (content flag)))	
+	)
+)
 
 (deffacts agent-facts
 	(guess (y 0) (x 0) (content nil))
