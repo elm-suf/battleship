@@ -54,7 +54,7 @@
 =>
 
   ; (printout t crlf crlf)
-  ; (printout t "vado ad ENV  step" ?s)
+  (printout t "vado ad ENV  step" ?s crlf)
   (focus ENV)
 
 )

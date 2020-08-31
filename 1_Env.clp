@@ -45,13 +45,16 @@
 
 
 (defrule action-fire 
-        ?us <- (status (step ?s) (currently running))
+    ?us <- (status (step ?s) (currently running))
 	(exec (step ?s) (action fire) (x ?x) (y ?y))
 	?mvs <- (moves (fires ?nf &:(> ?nf 0)))
 =>
 	(assert (fire ?x ?y))
-        (modify ?us (step (+ ?s 1)) )
+    (modify ?us (step (+ ?s 1)) )
 	(modify ?mvs (fires (- ?nf 1)))
+
+	(printout t "FIRE:[" ?x ", " ?y "]" crlf)
+
 )
 
 
@@ -60,9 +63,12 @@
         ?us <- (status (step ?s) (currently running))
 	(exec (step ?s) (action guess) (x ?x) (y ?y))
 	?mvs <- (moves (guesses ?ng &:(> ?ng 0)))
+	?cell <- (cell (x ?x) (y ?y) (content ?c))
 =>
+	(printout t "---Guess:[" ?x ", " ?y "]" ?c crlf)
+
 	(assert (guess ?x ?y))
-        (modify ?us (step (+ ?s 1)) )
+    (modify ?us (step (+ ?s 1)) )
 	(modify ?mvs (guesses (- ?ng 1)))
 )
 
@@ -93,6 +99,8 @@
 	?fc <- (cell (x ?x) (y ?y) (content boat) (status none))
 	?st <- (statistics (num_fire_ok ?fok))
 =>
+	(printout t "¬¬HIT:[" ?x ", " ?y "]" crlf)
+
 	(modify ?fc (content hit-boat) (status fired))
         (modify ?st (num_fire_ok (+ ?fok 1)))
 )
@@ -103,6 +111,7 @@
 	?fc <- (cell (x ?x) (y ?y) (content water) (status none))
 	?st <- (statistics (num_fire_ko ?fko))
 =>
+	(printout t "¬¬MISS:[" ?x ", " ?y "]" crlf)
 	(modify ?fc (status missed))
         (modify ?st (num_fire_ko (+ ?fko 1)))
 )
